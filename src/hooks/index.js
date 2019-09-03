@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { firebase } from "../firebase";
 import { collatedTasksExist } from "../helpers";
 import moment from "moment";
+import { all } from "q";
 
 export const useTasks = selectProject => {
   const [tasks, setTasks] = useState([]);
@@ -41,4 +42,27 @@ export const useTasks = selectProject => {
   }, [selectProject]);
 
   return { tasks, archivedTasks };
+};
+
+export const useProjects = () => {
+  const [projects, setProjects] = useState([]);
+
+  useEffect(() => {
+    firebase
+      .firestore()
+      .collection("projects")
+      .where("userId", "==", "fAw1gqnk6AyED8pzXy2j")
+      .orderBy("projectID")
+      .get()
+      .then(snap => {
+        const allProjects = snap.docs.map(project => ({
+          ...project.data(),
+          docId: project.id
+        }));
+        if (JSON.stringify(allProjects) !== JSON.stringify(projects)) {
+          setProjects(allProjects);
+        }
+      });
+  }, [projects]);
+  return { projects, setProjects };
 };
