@@ -1,2 +1,41 @@
 import React from "react";
-export const Sidebar = () => <p>I am a side bar</p>;
+import {
+  FaChevronDown,
+  FaInbox,
+  FaRegCalendarAlt,
+  FaRegCalendar
+} from "react-icons/fa";
+
+export const Sidebar = () => (
+  <div className="sidebar" data-testid="sidebar">
+    <ul className="sidebar__generic">
+      <li>
+        <span>
+          <FaInbox></FaInbox>
+        </span>
+        <span> Inbox </span>
+      </li>
+
+      <li>
+        <span>
+          <FaRegCalendar></FaRegCalendar>
+        </span>
+        <span> Today </span>
+      </li>
+      <li>
+        <span>
+          <FaRegCalendarAlt></FaRegCalendarAlt>
+        </span>
+        <span> Next 7 days </span>
+      </li>
+    </ul>
+    <div className="sidebar__middle">
+      <span>
+        <FaChevronDown></FaChevronDown>
+      </span>
+      <h2> Projects</h2>
+    </div>
+    <ul className="sidebar__projects">projects here</ul>
+    add projects component here
+  </div>
+);
