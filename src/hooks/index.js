@@ -1,45 +1,51 @@
 import { useState, useEffect } from "react";
+import moment from "moment";
 import { firebase } from "../firebase";
 import { collatedTasksExist } from "../helpers";
-import moment from "moment";
-import { all } from "q";
 
-export const useTasks = selectProject => {
+export const useTasks = selectedProject => {
   const [tasks, setTasks] = useState([]);
   const [archivedTasks, setArchivedTasks] = useState([]);
 
   useEffect(() => {
-    let unsub = firebase
+    let unsubscribe = firebase
       .firestore()
       .collection("tasks")
       .where("userId", "==", "fAw1gqnk6AyED8pzXy2j");
-    // if project doesnt exist go get it
-    unsub =
-      selectProject && !collatedTasksExist(selectProject)
-        ? (unsub = unsub.where("projectId", "==", selectProject))
-        : selectProject === "Today"
-        ? (unsub = unsub.where("data", "==", moment().format("DD/MM/YYYY")))
-        : selectProject == "INBOX" || selectProject === 0
-        ? (unsub = unsub.where("data", "==", ""))
-        : unsub;
 
-    unsub = unsub.onSnapshot(snap => {
-      const newTask = snap.docs.map(task => ({
+    unsubscribe =
+      selectedProject && !collatedTasksExist(selectedProject)
+        ? (unsubscribe = unsubscribe.where("projectId", "==", selectedProject))
+        : selectedProject === "TODAY"
+        ? (unsubscribe = unsubscribe.where(
+            "date",
+            "==",
+            moment().format("DD/MM/YYYY")
+          ))
+        : selectedProject === "INBOX" || selectedProject === 0
+        ? (unsubscribe = unsubscribe.where("date", "==", ""))
+        : unsubscribe;
+
+    unsubscribe = unsubscribe.onSnapshot(snapshot => {
+      const newTasks = snapshot.docs.map(task => ({
         id: task.id,
         ...task.data()
       }));
-      setTasks(selectProject === "NEXT_7")
-        ? newTask.filter(
-            task =>
-              moment(task.date, "DD=MM-YYYY").diff(moment(), "days") <= 7 &&
-              task.archived !== true
-          )
-        : newTask.filter(task => task.archived !== true);
 
-      setArchivedTasks(newTask.filteR(task => task.archived !== false));
+      setTasks(
+        selectedProject === "NEXT_7"
+          ? newTasks.filter(
+              task =>
+                moment(task.date, "DD-MM-YYYY").diff(moment(), "days") <= 7 &&
+                task.archived !== true
+            )
+          : newTasks.filter(task => task.archived !== true)
+      );
+      setArchivedTasks(newTasks.filter(task => task.archived !== false));
     });
-    return () => unsub();
-  }, [selectProject]);
+
+    return () => unsubscribe();
+  }, [selectedProject]);
 
   return { tasks, archivedTasks };
 };
@@ -52,17 +58,19 @@ export const useProjects = () => {
       .firestore()
       .collection("projects")
       .where("userId", "==", "fAw1gqnk6AyED8pzXy2j")
-      .orderBy("projectID")
+      .orderBy("projectId")
       .get()
-      .then(snap => {
-        const allProjects = snap.docs.map(project => ({
+      .then(snapshot => {
+        const allProjects = snapshot.docs.map(project => ({
           ...project.data(),
           docId: project.id
         }));
+
         if (JSON.stringify(allProjects) !== JSON.stringify(projects)) {
           setProjects(allProjects);
         }
       });
   }, [projects]);
+
   return { projects, setProjects };
 };
